@@ -198,6 +198,59 @@ static void setVibrance(setVibrance_t *params) {
     }
 }
 
+
+typedef struct {
+	NSWindow *window;
+	BOOL activate;
+	CGFloat cornerRadius;
+	NSColor* tintColor;
+	CGFloat padding;
+} setGlass_t;
+
+// https://developer.apple.com/documentation/appkit/nsglasseffectview
+static void setGlass(setGlass_t *params) {
+	NSArray* subviews = [[params->window contentView] subviews];
+
+	if (@available(macOS 26.0, *)) {
+		// remove any previous vibrancy view
+		NSArray *effectViews = [subviews filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id view, NSDictionary *bindings) {
+			return [view isKindOfClass: NSGlassEffectView.self];
+		}]];
+		for (NSView* view in effectViews) {
+			[view removeFromSuperview];
+		}
+
+		if(params->activate) {
+			// add the special view bellow to activate glass effect
+			NSGlassEffectView* effectView = [NSGlassEffectView new];
+			effectView.translatesAutoresizingMaskIntoConstraints = NO;
+			effectView.cornerRadius = params->cornerRadius;
+			effectView.tintColor = params->tintColor;
+			// add bellow first view
+			NSView* firstView = subviews.firstObject;
+			if(firstView==nil) {
+				[[params->window contentView] addSubview:effectView];
+			} else {
+				[[params->window contentView] addSubview:effectView positioned: NSWindowBelow relativeTo: firstView];
+			}
+			// constraints to keep fullscreen with window
+			if (params->padding == 0) {
+				[effectView.leadingAnchor constraintEqualToAnchor: [params->window contentView].leadingAnchor].active = YES;
+				[effectView.trailingAnchor constraintEqualToAnchor: [params->window contentView].trailingAnchor].active = YES;
+				[effectView.topAnchor constraintEqualToAnchor: [params->window contentView].topAnchor].active = YES;
+				[effectView.bottomAnchor constraintEqualToAnchor: [params->window contentView].bottomAnchor].active = YES;
+			}
+			else {
+				[effectView.leadingAnchor constraintEqualToAnchor: [params->window contentView].leadingAnchor constant: params->padding].active = YES;
+				[effectView.trailingAnchor constraintEqualToAnchor: [params->window contentView].trailingAnchor constant: -params->padding].active = YES;
+				[effectView.topAnchor constraintEqualToAnchor: [params->window contentView].topAnchor constant: params->padding].active = YES;
+				[effectView.bottomAnchor constraintEqualToAnchor: [params->window contentView].bottomAnchor constant: -params->padding].active = YES;
+			}
+		}
+	}
+}
+
+
 void SET_WINDOW_STYLE(PA_PluginParameters params) {
 
     PA_long32 arg1 = PA_GetLongParameter(params, 1);
@@ -330,6 +383,37 @@ void SET_WINDOW_STYLE(PA_PluginParameters params) {
                 }
 
                 PA_RunInMainProcess((PA_RunInMainProcessProcPtr)setVibrance, &params);
+            }
+
+            if(ob_is_defined(options, L"glass")) {
+                PA_ObjectRef glass = ob_get_o(options, L"glass");
+
+                setGlass_t params;
+                params.window = window;
+                params.cornerRadius = 0;
+                params.tintColor = nil;
+                params.padding = 0;
+                if (glass==nil) {
+                    params.activate = ob_get_b(options, L"glass"); // just activate or deactivate it
+                } else {
+                    params.activate = true;
+                    params.cornerRadius = ob_get_n(glass, L"cornerRadius");
+                    params.padding = ob_get_n(glass, L"padding");
+
+                    PA_ObjectRef tintColor = ob_get_o(options, L"tintColor");
+                    if(tintColor) {
+                        CGFloat r, g, b, a;
+                        r = ob_get_n(tintColor, L"red");
+                        g = ob_get_n(tintColor, L"green");
+                        b = ob_get_n(tintColor, L"blue");
+                        a = ob_get_n(tintColor, L"alpha");
+                        NSColor *color = [NSColor colorWithRed:r green:g blue:b alpha:a];
+                        color = [color colorUsingColorSpace:[NSColorSpace displayP3ColorSpace]];
+                        params.tintColor = color;
+                    }
+                }
+
+                PA_RunInMainProcess((PA_RunInMainProcessProcPtr)setGlass, &params);
             }
 
         }

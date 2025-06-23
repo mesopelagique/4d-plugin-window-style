@@ -191,11 +191,63 @@
 					],
 					"method": "ObjectMethods/Button11.4dm",
 					"focusable": false
+				},
+				"Button12": {
+					"type": "button",
+					"text": "Glass1",
+					"top": 142,
+					"left": 172,
+					"width": 67,
+					"height": 22,
+					"events": [
+						"onClick"
+					],
+					"method": "ObjectMethods/Button12.4dm",
+					"focusable": false
+				},
+				"Button13": {
+					"type": "button",
+					"text": "Glass2",
+					"top": 162,
+					"left": 172,
+					"width": 67,
+					"height": 22,
+					"events": [
+						"onClick"
+					],
+					"method": "ObjectMethods/Button13.4dm",
+					"focusable": false
+				},
+				"Button14": {
+					"type": "button",
+					"text": "X",
+					"top": 142,
+					"left": 242,
+					"width": 35,
+					"height": 22,
+					"events": [
+						"onClick"
+					],
+					"method": "ObjectMethods/Button14.4dm",
+					"focusable": false
+				},
+				"Button15": {
+					"type": "button",
+					"text": "Glass3",
+					"top": 182,
+					"left": 172,
+					"width": 67,
+					"height": 22,
+					"events": [
+						"onClick"
+					],
+					"method": "ObjectMethods/Button15.4dm",
+					"focusable": false
 				}
 			}
 		}
 	],
-	"geometryStamp": 69,
+	"geometryStamp": 83,
 	"method": "method.4dm",
 	"colorScheme": "dark",
 	"editor": {
